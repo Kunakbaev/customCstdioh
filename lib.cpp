@@ -87,10 +87,6 @@ MyStdiohErrors myStrcpy(char* dest, const char* src) {
     char* ptr_dest = dest;
     char* ptr_src  = (char*)src;
     do {
-        // dest buffer is not large enough
-        if (*ptr_dest == '\0' && *ptr_src != '\0')
-            return STDIO_ERROR_BUFFER_TOO_SMALL;
-
         *ptr_dest = *ptr_src;
         ++ptr_dest;
         ++ptr_src;

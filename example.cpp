@@ -9,7 +9,8 @@
 int main() {
     printf("Hello world\n");
 
-    enum MyStdiohErrors code = myPuts("i am puts");
+    enum MyStdiohErrors code = {};
+    code = myPuts("i am puts");
     printf("Error: %s\n", getErrorMessage(code));
 
     const char* result = {};
@@ -20,12 +21,15 @@ int main() {
     code = myStrlen("i am puts", &strLen);
     printf("Error: %s, result: %zu\n\n", getErrorMessage(code), strLen);
 
-    const char* srcString  ="i am src string";
-    char* output = (char*)calloc(strlen(srcString), sizeof(char));
+    const char* srcString  = "i am src string";
+    char* output = (char*)calloc(strlen(srcString) + 2, sizeof(*srcString));
+
     assert(output != NULL);
-    code = myStrcpy(output, "i am src string");
-    printf("Error: %s, result: %zu\n\n", getErrorMessage(code), strLen);
+    code = myStrcpy(output, srcString);
+    printf("Error: %s, output: %s\n\n", getErrorMessage(code), output);
     free(output);
+
+
 
     return 0;
 }
