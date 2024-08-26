@@ -298,18 +298,19 @@ static MyStdiohErrors helpterStrspnFunc(const char* string, const char* good, si
         ((shouldBeIn && isInDelims[*ptr]) ||
         (!shouldBeIn && !isInDelims[*ptr])));
     *res = *res - 1;
+    return STDIO_ERROR_OK;
 }
 
 static MyStdiohErrors myStrspn(const char* string, const char* good, size_t* res) {
     if (string == NULL || good == NULL || res == NULL)
         return STDIO_ERROR_INVALID_ARG;
 
-    helpterStrspnFunc(string, good, res, true);
+    return helpterStrspnFunc(string, good, res, true);
 }
 
 static MyStdiohErrors myStrcspn(const char* string, const char* bad, size_t* res) {
     if (string == NULL || bad == NULL || res == NULL)
         return STDIO_ERROR_INVALID_ARG;
 
-    helpterStrspnFunc(string, bad, res, false);
+    return helpterStrspnFunc(string, bad, res, false);
 }
