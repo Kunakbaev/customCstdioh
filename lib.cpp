@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <memory.h>
 
 #include "lib.hpp"
 
@@ -105,6 +106,7 @@ static MyStdiohErrors strictStrCopy(char* dest, const char* src, size_t count) {
     return STDIO_ERROR_OK;
 }
 
+// FIXME: return as was
 // https://en.cppreference.com/w/c/string/byte/strcpy
 MyStdiohErrors myStrcpy(char* dest, const char* src) {
     if (dest == NULL || src == NULL)
@@ -118,20 +120,7 @@ MyStdiohErrors myStrncpy(char* dest, const char* src, size_t count) {
     if (dest == NULL || src == NULL || count <= 0)
         return STDIO_ERROR_INVALID_ARG;
 
-    char* ptr_dest       = dest;
-    const char* ptr_src  = src;
-    while (count--) {
-        if (ptr_dest == NULL || ptr_src == NULL)
-            return STDIO_ERROR_NULL_PTR;
-        //printf("%d %c %c\n", count, *ptr_dest, *ptr_src);
-        if (count != 0)
-            *ptr_dest = *ptr_src;
-        ++ptr_dest;
-        if (*ptr_src != '\0')
-            ++ptr_src;
-    };
-
-    return STDIO_ERROR_OK;
+    return strictStrCopy(dest, src, count);
 }
 
 // https://en.cppreference.com/w/c/string/byte/strcat
@@ -170,8 +159,6 @@ MyStdiohErrors myFgets(char* str, int count, FILE* stream) {
     while ((ch = getc(stream)) != EOF && (--count)) {
         if (ch == '\0' || ch == '\n')
             break;
-        if (ptr == NULL)
-            return STDIO_ERROR_NULL_PTR;
 
         *ptr = ch;
         ++ptr;
@@ -198,6 +185,8 @@ MyStdiohErrors myStrdup(const char* src, char** result) {
 }
 
 // https://en.cppreference.com/w/cpp/string/basic_string/getline
+// FIXME: return strlen of resutl
+
 MyStdiohErrors myGetline(FILE* stream, char* result, char delim) {
     if (stream == NULL || result == NULL)
         return STDIO_ERROR_INVALID_ARG;
@@ -218,11 +207,15 @@ MyStdiohErrors myGetline(FILE* stream, char* result, char delim) {
     return STDIO_ERROR_OK;
 }
 
+// O(strlen(tmp) + strlen(src))
 MyStdiohErrors myStrstr(const char* tmp, const char* src) {
+    if (tmp == NULL || src == NULL)
+        return STDIO_ERROR_INVALID_ARG;
+
     size_t len1 = 0;
     size_t len2 = 0;
 
-    MyStdiohErrors error = {};
+    MyStdiohErrors error = STDIO_ERROR_OK;
     error = myStrlen(tmp, &len1);
     if (error != STDIO_ERROR_OK)
         return error;
@@ -230,28 +223,29 @@ MyStdiohErrors myStrstr(const char* tmp, const char* src) {
     if (error != STDIO_ERROR_OK)
         return error;
 
+    if (!len1 || !len2)
+        return STDIO_ERROR_INVALID_ARG;
+
+
     size_t arrLen = len1 + 1 + len2;
-
-    char* s = (char*)calloc(arrLen + 1, sizeof(char));
-    error = myStrcat(s, tmp);
+    char* concatString = (char*)calloc(arrLen + 1, sizeof(char));
+    error = myStrcat(concatString, tmp);
     if (error != STDIO_ERROR_OK)
         return error;
 
-    const char* delim = "#";
-    error = myStrcat(s, delim);
-    if (error != STDIO_ERROR_OK)
-        return error;
-    printf("s : %s\n", s);
+    concatString[len1] = DELIM;
+    concatString[len1 + 1] = '\0';
+    //printf("s : %s\n", s);
     //return STDIO_ERROR_OK;
 
-    error = myStrcat(s, src);
+    error = myStrcat(concatString, src);
     if (error != STDIO_ERROR_OK)
         return error;
 
-    printf("s : %s\n", s);
+    printf("s : %s\n", concatString);
     printf("arrLen : %zu\n", arrLen);
 
-    int* prefFunc = (int*)calloc(arrLen * 2 + 10, sizeof(int));
+    int* prefFunc = (int*)calloc(arrLen, sizeof(int));
     if (prefFunc == NULL)
         return STDIO_ERROR_ALLOCATION;
 
@@ -260,14 +254,10 @@ MyStdiohErrors myStrstr(const char* tmp, const char* src) {
     for (int i = 1; i < arrLen; ++i) {
         int* ptr = &prefFunc[i];
         *ptr = prefFunc[i - 1];
-        while (s[*ptr] != s[i] && *ptr != 0)
+        while (concatString[*ptr] != concatString[i] && *ptr != 0)
             *ptr = prefFunc[*ptr];
-
-        //printf("i : %d, ptr : %d\n", i, *ptr);
-        if (s[*ptr] == s[i])
+        if (concatString[*ptr] == concatString[i])
             *ptr = *ptr + 1;
-        //printf("i : %d, ptr : %d\n", i, prefFunc[i]);
-        //if (i == 0) break;
     }
 
     printf("prefFunc : ");
@@ -281,7 +271,45 @@ MyStdiohErrors myStrstr(const char* tmp, const char* src) {
             printf("%zu ", i - len1 - 2);
     printf("\n");
 
+    free(concatString);
     free(prefFunc);
-    free(s);
     return STDIO_ERROR_OK;
+}
+
+
+
+// mega bruh
+bool isInDelims[256] = {}; // 256 - number of chars
+
+static MyStdiohErrors helpterStrspnFunc(const char* string, const char* good, size_t* res, bool shouldBeIn) {
+    if (string == NULL || good == NULL || res == NULL)
+        return STDIO_ERROR_INVALID_ARG;
+
+    memset(isInDelims, 0, 256 * sizeof(bool));
+    const char* ptr = good;
+    do {
+        isInDelims[*ptr] = 1;
+    } while(*ptr != '\0');
+
+    ptr = string;
+    do {
+        *res = *res + 1;
+    } while (*ptr != '\0' &&
+        ((shouldBeIn && isInDelims[*ptr]) ||
+        (!shouldBeIn && !isInDelims[*ptr])));
+    *res = *res - 1;
+}
+
+static MyStdiohErrors myStrspn(const char* string, const char* good, size_t* res) {
+    if (string == NULL || good == NULL || res == NULL)
+        return STDIO_ERROR_INVALID_ARG;
+
+    helpterStrspnFunc(string, good, res, true);
+}
+
+static MyStdiohErrors myStrcspn(const char* string, const char* bad, size_t* res) {
+    if (string == NULL || bad == NULL || res == NULL)
+        return STDIO_ERROR_INVALID_ARG;
+
+    helpterStrspnFunc(string, bad, res, false);
 }

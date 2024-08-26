@@ -66,8 +66,8 @@ int main() {
     // printf("myStrdup, Error: %s, output: %s\n\n", getErrorMessage(code), output);
 
     // ------------------------------       MY STRSTR        ---------------------------------------
-    const char* tmpStr = "ab";
-    const char* srcStr = "abababcab";
+    const char* tmpStr = "bca";
+    const char* srcStr = "jilszdfhlsdajfbcafhalksjd";
     code = myStrstr(tmpStr, srcStr);
     printf("myStrstr, Error: %s\n\n", getErrorMessage(code));
 
@@ -76,4 +76,4 @@ int main() {
     return 0;
 }
 
-// strstr
+// strtok
