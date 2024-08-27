@@ -278,7 +278,7 @@ MyStdiohErrors myStrstr(const char* tmp, const char* src) {
 
 
 
-// mega bruh
+// mega bruh (bool -> sizeof(char)(8 bits not 1) (could be array of 4 ull)
 bool isInDelims[256] = {}; // 256 - number of chars
 
 static MyStdiohErrors helpterStrspnFunc(const char* string, const char* good, size_t* res, bool shouldBeIn) {
@@ -289,28 +289,80 @@ static MyStdiohErrors helpterStrspnFunc(const char* string, const char* good, si
     const char* ptr = good;
     do {
         isInDelims[*ptr] = 1;
+        ++ptr;
     } while(*ptr != '\0');
 
+    *res = 0;
     ptr = string;
-    do {
+    //printf("symb : %c\n", *ptr);
+    while ((shouldBeIn && isInDelims[*ptr]) ||
+        (!shouldBeIn && !isInDelims[*ptr])) {
         *res = *res + 1;
-    } while (*ptr != '\0' &&
-        ((shouldBeIn && isInDelims[*ptr]) ||
-        (!shouldBeIn && !isInDelims[*ptr])));
-    *res = *res - 1;
+        ++ptr;
+        if (*ptr == '\0')
+            break;
+    }
+    // if (*res == 0)
+    //     *res = 1;
+    //*res = *res - 1;
     return STDIO_ERROR_OK;
 }
 
-static MyStdiohErrors myStrspn(const char* string, const char* good, size_t* res) {
+MyStdiohErrors myStrspn(const char* string, const char* good, size_t* res) {
     if (string == NULL || good == NULL || res == NULL)
         return STDIO_ERROR_INVALID_ARG;
 
     return helpterStrspnFunc(string, good, res, true);
 }
 
-static MyStdiohErrors myStrcspn(const char* string, const char* bad, size_t* res) {
+MyStdiohErrors myStrcspn(const char* string, const char* bad, size_t* res) {
     if (string == NULL || bad == NULL || res == NULL)
         return STDIO_ERROR_INVALID_ARG;
 
     return helpterStrspnFunc(string, bad, res, false);
+}
+
+MyStdiohErrors myStrtok(char** string, const char* delim, char** result) {
+    if (delim == NULL || result == NULL)
+        return STDIO_ERROR_INVALID_ARG;
+
+    static char* buffer;
+    *result = NULL;
+    //printf("string : %s\n", *string);
+    MyStdiohErrors error = STDIO_ERROR_OK;
+    if (string != NULL) {
+        error = myStrdup(*string, &buffer);
+        if (error != STDIO_ERROR_OK)
+            return error;
+        // printf("biba");
+    }
+    // printf("buffer : %s\n", buffer);
+
+    //*buffer = '\0';
+    //return STDIO_ERROR_OK;
+
+    size_t jump = 0;
+    error = myStrspn(buffer, delim, &jump);
+    if (error != STDIO_ERROR_OK)
+        return error;
+    //printf("jump1 : %zu\n", jump);
+    buffer += jump;
+    *result = buffer;
+    //printf("result : %s\n", *result);
+    if (*buffer == '\0') { // we didn't find token
+        *result = NULL;
+        return STDIO_ERROR_OK;
+    }
+
+    error = myStrcspn(buffer, delim, &jump);
+    if (error != STDIO_ERROR_OK)
+        return error;
+    //printf("jump2 : %zu\n", jump);
+    buffer += jump;
+    //printf("buffer : %s\n", buffer);
+    //return STDIO_ERROR_OK;
+
+    if (*buffer != '\0') // we "cut" token out of string, so we finish token with '\0'
+        *buffer++ = '\0';
+    return STDIO_ERROR_OK;
 }

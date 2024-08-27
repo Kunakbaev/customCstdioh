@@ -34,4 +34,10 @@ MyStdiohErrors myGetline(FILE* stream, char* result, char delim);
 
 MyStdiohErrors myStrstr(const char* tmp, const char* src);
 
+MyStdiohErrors myStrcspn(const char* string, const char* bad, size_t* res);
+
+MyStdiohErrors myStrspn(const char* string, const char* good, size_t* res);
+
+MyStdiohErrors myStrtok(char** string, const char* delim, char** result);
+
 #endif

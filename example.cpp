@@ -71,7 +71,38 @@ int main() {
     code = myStrstr(tmpStr, srcStr);
     printf("myStrstr, Error: %s\n\n", getErrorMessage(code));
 
-    free(output);
+    // ------------------------------       MY STRSPN       ----------------------------------------
+    const char* string = "1 + 38 * (4 + 5)";
+    const char* good   = "+*() ";
+    size_t      res    = {};
+    code = myStrspn(string + 1, good, &res);
+    printf("myStrspn, Error: %s, result: %zu\n\n", getErrorMessage(code), res);
+
+    // ------------------------------       MY STRCSPN       ----------------------------------------
+    string = "1 + 38 * (4 + 5)";
+    good   = "+*() ";
+    res    = {};
+    code = myStrcspn(string + 4, good, &res);
+    printf("myStrcspn, Error: %s, result: %zu\n\n", getErrorMessage(code), res);
+
+    // ------------------------------       MY STRTOK       ----------------------------------------
+    //const char* string = "1 + 38 * (4 + 5)";
+    output = "123 + 38 * (94 + 535)";
+    printf("output : %s\n", output);
+    good   = "+*() ";
+    res    = {};
+    char* token = (char*)calloc(20, sizeof(char));
+    code = myStrtok(&output, good, &token);
+    int i = 0;
+    while (token && i < 7) {
+        printf("myStrtok, Error: %s, token: %s\n", getErrorMessage(code), token);
+        code = myStrtok(NULL, good, &token);
+        ++i;
+    }
+    printf("\n");
+    free(token);
+
+    //free(output);
     output = NULL;
     return 0;
 }
