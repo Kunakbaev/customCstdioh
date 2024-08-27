@@ -187,17 +187,19 @@ MyStdiohErrors myStrdup(const char* src, char** result) {
 // https://en.cppreference.com/w/cpp/string/basic_string/getline
 // FIXME: return strlen of resutl
 
-MyStdiohErrors myGetline(FILE* stream, char* result, char delim) {
-    if (stream == NULL || result == NULL)
+MyStdiohErrors myGetline(FILE* stream, char* result, char delim, size_t* resultLen) {
+    if (stream == NULL || result == NULL || resultLen == 0)
         return STDIO_ERROR_INVALID_ARG;
 
     char ch = '?';
     char* ptr = result;
+    *resultLen = 0;
     while ((ch = getc(stream)) != EOF) {
         if (ch == delim) break;
         if (ptr == NULL)
             return STDIO_ERROR_NULL_PTR;
         *ptr = ch;
+        ++(*resultLen);
         ++ptr;
     }
     if (ptr == NULL)

@@ -30,7 +30,7 @@ MyStdiohErrors myFgets(char* str, int count, FILE* stream);
 
 MyStdiohErrors myStrdup(const char* src, char** result);
 
-MyStdiohErrors myGetline(FILE* stream, char* result, char delim);
+MyStdiohErrors myGetline(FILE* stream, char* result, char delim, size_t* resultLen);
 
 MyStdiohErrors myStrstr(const char* tmp, const char* src);
 
